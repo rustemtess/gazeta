@@ -1,4 +1,5 @@
 <?
+session_start();
 
 include_once 'api/db.php';
 include_once 'api/newspaper.module.php';
@@ -23,7 +24,7 @@ include_once 'api/newspaper.module.php';
             <div class="w-full flex flex-col max-w-[200px]">
                 <h1>ID моих газет:</h1>
                 <?
-                    foreach(getMyNewspaper(1) as $news) {
+                    foreach(getMyNewspaper(intval($_SESSION['user_id'])) as $news) {
                         ?>
                             <a href="/gazeta.php?id=<?=$news['newspaper_id']?>" class="text-lg underline">Перейти по ID: <span class="font-medium"><?=$news['newspaper_id']?></span></a>
                         <?
@@ -44,7 +45,7 @@ include_once 'api/newspaper.module.php';
                 <form class="flex flex-col gap-2" method="post" action="/api/index.php" enctype="multipart/form-data">
                     <input class="bg-gray-100 rounded p-2 outline-none" name="title" placeholder="Название газеты" />
                     <input class="bg-gray-100 rounded p-2 outline-none" name="date" type="date" />
-                    <input name="author_id" hidden value="1" />
+                    <input name="author_id" hidden value="<?=$_SESSION['user_id']?>" />
                     <button class="bg-black text-white rounded p-2" type="submit" name="submit">Создать газету</button>
                 </form>
                 <h3>Загрузить фотографию</h3>

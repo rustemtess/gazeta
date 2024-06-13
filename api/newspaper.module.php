@@ -13,7 +13,7 @@ function getNewspaperById(int $id = 0) {
 
 function getNewspaperContentDataById(int $id = 0) {
     global $db;
-    $query = $db->prepare("SELECT `newspaper_content_data_text` FROM `newspapers_content_data` WHERE newspaper_id = ?");
+    $query = $db->prepare("SELECT `newspaper_content_data_type`, `newspaper_content_data_text`, `newspaper_content_data_id` FROM `newspapers_content_data` WHERE newspaper_id = ?");
     $query->bind_param('i', $id);
     $query->execute();
     $result = $query->get_result();
@@ -29,7 +29,10 @@ function getNewspaperAll() : array {
 function getNewspaperMainList() {
     global $db;
     return $db->query(
-        "SELECT newspapers.newspaper_id, `newspaper_date`, `newspaper_title`, `newspaper_content_img` FROM `newspapers`, `newspapers_content` WHERE newspapers_content.newspaper_id = newspapers.newspaper_id"
+        "SELECT newspapers.newspaper_id, newspaper_date, newspaper_title, newspaper_content_img
+FROM newspapers, newspapers_content
+WHERE newspapers_content.newspaper_id = newspapers.newspaper_id
+ORDER BY CAST(SUBSTRING_INDEX(newspaper_title, ' ', 1) AS DECIMAL) ASC, newspaper_title ASC;"
     )->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -39,11 +42,11 @@ function searchNewspaperByText(string $text) : array {
     // Преобразование текста к нижнему регистру
     $lowercase_text = strtolower($text);
     $query = $db->query(
-        "SELECT newspapers.newspaper_id, `newspaper_date`, `newspaper_title`, `newspaper_content_img` 
+        "SELECT DISTINCT newspapers.newspaper_id, `newspaper_date`, `newspaper_title`, `newspaper_content_img` 
         FROM `newspapers`, `newspapers_content`, `newspapers_content_data` 
         WHERE newspapers.newspaper_id = newspapers_content.newspaper_id 
         AND newspapers_content.newspaper_content_id = newspapers_content_data.newspaper_id 
-        AND LOWER(newspapers_content_data.newspaper_content_data_text) LIKE '%$lowercase_text%'"
+        AND LOWER(newspapers_content_data.newspaper_content_data_text) LIKE '%$lowercase_text%' ORDER BY CAST(SUBSTRING_INDEX(newspaper_title, ' ', 1) AS DECIMAL) ASC, newspaper_title ASC;"
     )->fetch_all(MYSQLI_ASSOC);
     return $query;
 }
@@ -57,7 +60,7 @@ function getMyNewspaper(int $authorId): array {
 
 function createNewspaper(string $title, string $date, int $authorId) {
     global $db;
-    $query = $db->prepare("INSERT INTO `newspapers`(`newspaper_date`, `newspaper_title`, `newspapers_author_id`) VALUES (?,?)");
+    $query = $db->prepare("INSERT INTO `newspapers`(`newspaper_date`, `newspaper_title`, `newspapers_author_id`) VALUES (?,?,?)");
     $query->bind_param('ssi', $date, $title, $authorId);
     $query->execute();
 }
@@ -69,10 +72,17 @@ function addNewspaperContent (string $fileUrl, int $newspaper_id){
     $query->execute();
 }
 
-function addNewspaperContentData(string $newspaper_text, int $newspaper_id) {
+function addNewspaperContentData(string $newspaper_text, int $newspaper_id, string $newspaper_type) {
     global $db;
-    $query = $db->prepare("INSERT INTO `newspapers_content_data`(`newspaper_content_data_text`, `newspaper_id`) VALUES (?,?)");
-    $query->bind_param('si', $newspaper_text, $newspaper_id);
+    $query = $db->prepare("INSERT INTO `newspapers_content_data`(`newspaper_content_data_text`, `newspaper_content_data_type`, `newspaper_id`) VALUES (?,?,?)");
+    $query->bind_param('ssi', $newspaper_text, $newspaper_type, $newspaper_id);
+    $query->execute();
+}
+
+function updateNewspaperContentData(int $newspaper_content_data_id, string $newtext) {
+    global $db;
+    $query = $db->prepare("UPDATE `newspapers_content_data` SET `newspaper_content_data_text`= ? WHERE `newspaper_content_data_id` = ?");
+    $query->bind_param('si', $newtext, $newspaper_content_data_id);
     $query->execute();
 }
 

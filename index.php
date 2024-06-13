@@ -1,5 +1,5 @@
 <?
-
+session_start();
 include_once 'api/db.php';
 include_once 'api/newspaper.module.php';
 
@@ -11,7 +11,6 @@ if(isset($_POST['search'])) {
     $arr = [];
     $arr = getNewspaperMainList();
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -26,7 +25,17 @@ if(isset($_POST['search'])) {
     <div class="w-full max-w-[1200px] flex flex-col">
         <header class="flex items-center justify-between">
             <h1 class="text-xl">Газета</h1>
-            <a class="bg-black rounded p-2 text-white" href="/admin.php">Админ панель</a>
+            <?
+                if(isset($_SESSION['user_id']) && $_SESSION['user_id'] != null) {
+                    ?>
+                        <a class="bg-black rounded p-2 text-white" href="/admin.php">Админ панель</a>
+                    <?
+                }else {
+                    ?>
+                        <a class="bg-black rounded p-2 text-white" href="/register.php">Регистрация</a>
+                    <?
+                }
+            ?>
             <form method="POST" class="flex items-center gap-2">
                 <input class="bg-gray-100 rounded p-2 outline-none" name="search_text" type="text" placeholder="Поиск" />
                 <button class="bg-black rounded p-2 text-white" name="search">Поиск</button>
